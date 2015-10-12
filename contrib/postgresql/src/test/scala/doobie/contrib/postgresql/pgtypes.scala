@@ -107,6 +107,15 @@ object pgtypesspec extends Specification {
   implicit val MyJavaEnumMeta = pgJavaEnum[MyJavaEnum]("myenum")
   testInOutNN("myenum", MyJavaEnum.bar)
 
+
+  s"Analysis of myenum" >> {
+    (for {
+      _  <- Update0(s"CREATE TEMPORARY TABLE TEST (value myenum)", None).run
+      a  <- sql"SELECT value FROM TEST".query[MyJavaEnum].analysis
+    } yield a.columnTypeErrors
+    ).transact(xa).run must_== Nil
+  }
+
   // 8.8 Geometric Types
   testInOut("box", new PGbox(new PGpoint(1, 2), new PGpoint(3, 4)))
   testInOut("circle", new PGcircle(new PGpoint(1, 2), 3))
